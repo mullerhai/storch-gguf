@@ -5,12 +5,40 @@ package torch.gguf
  * Each type has an associated byte size, which can be either positive for fixed-size types
  * or negative to indicate variable-length types with a length prefix.
  */
+
 enum MetadataValueType:
   case UINT8, INT8, UINT16, INT16, UINT32, INT32, FLOAT32, BOOL, STRING, ARRAY, UINT64, INT64, FLOAT64
+  
+  def byteSize(): Int = this match
+    case UINT8 | INT8 | BOOL => 1
+    case UINT16 | INT16 => 2
+    case UINT32 | INT32 | FLOAT32 => 4
+    case UINT64 | INT64 | FLOAT64 => 8
+    case STRING | ARRAY => -8
+
+//enum MetadataValueType:
+//  case UINT8, INT8, UINT16, INT16, UINT32, INT32, FLOAT32, BOOL, STRING, ARRAY, UINT64, INT64, FLOAT64
 
 object MetadataValueType:
-  
-  
+
+  def fromIndex(index: Int): MetadataValueType = index match {
+    case 0 => UINT8
+    case 1 => INT8
+    case 2 => UINT16
+    case 3 => INT16
+    case 4 => UINT32
+    case 5 => INT32
+    case 6 => FLOAT32
+    case 7 => BOOL
+    case 8 => STRING
+    case 9 => ARRAY
+    case 10 => UINT64
+    case 11 => INT64
+    case 12 => FLOAT64
+    case _ => throw new ArrayIndexOutOfBoundsException("Invalid index for MetadataValueType")
+  }
+
+  def byteSize: Int = byteSize
   /**
    * The value is a 8-bit unsigned integer.
    */
@@ -130,17 +158,7 @@ object MetadataValueType:
    * @return the MetadataValueType at the specified index
    * @throws ArrayIndexOutOfBoundsException if the index is out of range
    */
-  def fromIndex(index: Int): MetadataValueType = this match {
-    case UINT8 => UINT8
-    case INT8 => INT8
-    case UINT16 => UINT16
-    case INT16 => INT16
-    case UINT32 => UINT32
-    case INT32 => INT32
-    case FLOAT32 => FLOAT32
-    case BOOL => BOOL
-    case STRING => STRING 
-  }
+
 
   /**
    * Returns the byte size of this value type.
@@ -148,4 +166,4 @@ object MetadataValueType:
    * @return for fixed-size types, returns the positive size in bytes;
    *         for variable-length types, returns the negative size of their length prefix
    */
-  def byteSize: Int = byteSize
+

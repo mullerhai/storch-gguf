@@ -1,13 +1,12 @@
 package torch.gguf.impl
 
 import torch.gguf.MetadataValueType.{ARRAY, BOOL, FLOAT32, FLOAT64, INT16, INT32, INT64, INT8, STRING, UINT16, UINT32, UINT64, UINT8}
-
 import torch.gguf.{GGMLType, GGUF, MetadataValueType, TensorInfo}
 
 import scala.jdk.CollectionConverters.*
 import scala.collection.mutable
 import java.io.{EOFException, IOException}
-import java.nio.{ByteBuffer, ByteOrder}
+import java.nio.{Buffer, ByteBuffer, ByteOrder}
 import java.nio.channels.ReadableByteChannel
 import java.nio.charset.StandardCharsets
 
@@ -172,22 +171,22 @@ final class ReaderImpl {
     // The array of values.
     // gguf_metadata_value_t array[len];
     componentType match {
-      case UINT8 =>
-      case INT8 =>
+//      case UINT8 =>
+      case INT8 | UINT8 =>
         val bytes = new Array[Byte](len)
         for (i <- 0 until len) {
           bytes(i) = readByte(byteChannel)
         }
         bytes
-      case UINT16 =>
-      case INT16 =>
+//      case UINT16 =>
+      case INT16 | UINT16  =>
         val shorts = new Array[Short](len)
         for (i <- 0 until len) {
           shorts(i) = readShort(byteChannel)
         }
         shorts
-      case UINT32 =>
-      case INT32 =>
+//      case UINT32 =>
+      case INT32 | UINT32 =>
         val ints = new Array[Int](len)
         for (i <- 0 until len) {
           ints(i) = readInt(byteChannel)
@@ -233,19 +232,19 @@ final class ReaderImpl {
 
   @throws[IOException]
   private def readMetadataValueOfType(byteChannel: ReadableByteChannel, key: String, valueType: MetadataValueType) = valueType match {
-    case UINT8 => // fall-through
-    case INT8 =>
+//    case UINT8 => // fall-through
+    case INT8 | UINT8 =>
       readByte(byteChannel)
-    case UINT16 => // fall-through
-    case INT16 =>
+//    case UINT16 => // fall-through
+    case INT16 | UINT16 =>
       readShort(byteChannel)
-    case UINT32 => // fall-through
-    case INT32 =>
+//    case UINT32 => // fall-through
+    case INT32 | UINT32  =>
       readInt(byteChannel)
     case FLOAT32 =>
       readFloat(byteChannel)
-    case UINT64 => // fall-through
-    case INT64 =>
+//    case UINT64 => // fall-through
+    case INT64 | UINT64 =>
       readLong(byteChannel)
     case FLOAT64 =>
       readDouble(byteChannel)
@@ -275,19 +274,19 @@ final class ReaderImpl {
   }
 
   @throws[IOException]
-  private def readByte(byteChannel: ReadableByteChannel) = readFully(byteChannel, BB_8.clear.limit(1)).get(0)
+  private def readByte(byteChannel: ReadableByteChannel) = readFully(byteChannel, BB_8.clear.limit(1).asInstanceOf[ByteBuffer]).get(0)
 
   @throws[IOException]
   private def readBoolean(byteChannel: ReadableByteChannel) = readByte(byteChannel) != 0
 
   @throws[IOException]
-  private def readShort(byteChannel: ReadableByteChannel) = readFully(byteChannel, BB_8.clear.limit(2)).getShort(0)
+  private def readShort(byteChannel: ReadableByteChannel) = readFully(byteChannel, BB_8.clear.limit(2).asInstanceOf[ByteBuffer]).getShort(0)
 
   @throws[IOException]
-  private def readInt(byteChannel: ReadableByteChannel) = readFully(byteChannel, BB_8.clear.limit(4)).getInt(0)
+  private def readInt(byteChannel: ReadableByteChannel) = readFully(byteChannel, BB_8.clear.limit(4).asInstanceOf[ByteBuffer]).getInt(0)
 
   @throws[IOException]
-  private def readLong(byteChannel: ReadableByteChannel) = readFully(byteChannel, BB_8.clear.limit(8)).getLong(0)
+  private def readLong(byteChannel: ReadableByteChannel) = readFully(byteChannel, BB_8.clear.limit(8).asInstanceOf[ByteBuffer]).getLong(0)
 
   @throws[IOException]
   private def readFloat(byteChannel: ReadableByteChannel) = java.lang.Float.intBitsToFloat(readInt(byteChannel))

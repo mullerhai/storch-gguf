@@ -25,7 +25,7 @@ object WriterImpl {
 }
 
 final class WriterImpl ( val gguf: GGUF) {
-  final private val BB_8 = ByteBuffer.allocate(java.lang.Long.BYTES).order(ByteOrder.nativeOrder)
+  final private val BB_8: ByteBuffer = ByteBuffer.allocate(java.lang.Long.BYTES).order(ByteOrder.nativeOrder)
   private var totalBytesWritten = 0L
 
   @throws[IOException]
@@ -41,7 +41,7 @@ final class WriterImpl ( val gguf: GGUF) {
 
   @throws[IOException]
   private def writeLong(byteChannel: WritableByteChannel, value: Long): Unit = {
-    writeFully(byteChannel, BB_8.clear.putLong(value).flip)
+    writeFully(byteChannel, BB_8.clear.asInstanceOf[ByteBuffer].putLong(value).flip.asInstanceOf[ByteBuffer])
   }
 
   @throws[IOException]
@@ -51,7 +51,7 @@ final class WriterImpl ( val gguf: GGUF) {
 
   @throws[IOException]
   private def writeInt(byteChannel: WritableByteChannel, value: Int): Unit = {
-    writeFully(byteChannel, BB_8.clear.putInt(value).flip)
+    writeFully(byteChannel, BB_8.clear.asInstanceOf[ByteBuffer].putInt(value).flip.asInstanceOf[ByteBuffer])
   }
 
   @throws[IOException]
@@ -61,7 +61,7 @@ final class WriterImpl ( val gguf: GGUF) {
 
   @throws[IOException]
   private def writeByte(byteChannel: WritableByteChannel, value: Byte): Unit = {
-    writeFully(byteChannel, BB_8.clear.put(value).flip)
+    writeFully(byteChannel, BB_8.clear.asInstanceOf[ByteBuffer].put(value).flip.asInstanceOf[ByteBuffer])
   }
 
   @throws[IOException]
@@ -72,7 +72,7 @@ final class WriterImpl ( val gguf: GGUF) {
 
   @throws[IOException]
   private def writeShort(byteChannel: WritableByteChannel, value: Short): Unit = {
-    writeFully(byteChannel, BB_8.clear.putShort(value).flip)
+    writeFully(byteChannel, BB_8.clear.asInstanceOf[ByteBuffer].putShort(value).flip.asInstanceOf[ByteBuffer])
   }
 
   @throws[IOException]
@@ -186,16 +186,16 @@ final class WriterImpl ( val gguf: GGUF) {
     writeValueType(byteChannel, componentType)
     writeLong(byteChannel, arrayLength)
     componentType match {
-      case UINT8 => // fall-through
-      case INT8 =>
+//      case UINT8 => // fall-through
+      case INT8 | UINT8=>
         writeBytes(byteChannel, value.asInstanceOf[Array[Byte]])
-      case UINT16 => // fall-through
-      case INT16 =>
+//      case UINT16 => // fall-through
+      case INT16 | UINT16 =>
         for (s <- value.asInstanceOf[Array[Short]]) {
           writeShort(byteChannel, s)
         }
-      case UINT32 => // fall-through
-      case INT32 =>
+//      case UINT32 => // fall-through
+      case INT32 | UINT32 =>
         for (i <- value.asInstanceOf[Array[Int]]) {
           writeInt(byteChannel, i)
         }
@@ -208,8 +208,8 @@ final class WriterImpl ( val gguf: GGUF) {
         for (s <- stringArray) {
           writeString(byteChannel, s)
         }
-      case UINT64 => // fall-through
-      case INT64 =>
+//      case UINT64 => // fall-through
+      case INT64 | UINT64 =>
         for (n <- value.asInstanceOf[Array[Long]]) {
           writeLong(byteChannel, n)
         }
@@ -231,14 +231,14 @@ final class WriterImpl ( val gguf: GGUF) {
     if (valueType eq MetadataValueType.ARRAY) throw new IllegalArgumentException("use writeArrayOf instead")
     writeValueType(byteChannel, valueType)
     valueType match {
-      case UINT8 => // fall-through
-      case INT8 =>
+//      case UINT8 => // fall-through
+      case INT8 | UINT8 =>
         writeByte(byteChannel, value.asInstanceOf[Byte])
-      case UINT16 => // fall-through
-      case INT16 =>
+//      case UINT16 => // fall-through
+      case INT16 | UINT16 =>
         writeShort(byteChannel, value.asInstanceOf[Short])
-      case UINT32 => // fall-through
-      case INT32 =>
+//      case UINT32 => // fall-through
+      case INT32 | UINT32  =>
         writeInt(byteChannel, value.asInstanceOf[Int])
       case FLOAT32 =>
         writeFloat(byteChannel, value.asInstanceOf[Float])
@@ -248,8 +248,8 @@ final class WriterImpl ( val gguf: GGUF) {
         writeString(byteChannel, value.asInstanceOf[String])
       case ARRAY =>
         throw new IllegalArgumentException("use writeArrayOf instead")
-      case UINT64 => // fall-through
-      case INT64 =>
+//      case UINT64 => // fall-through
+      case INT64 | UINT64 =>
         writeLong(byteChannel, value.asInstanceOf[Long])
       case FLOAT64 =>
         writeDouble(byteChannel, value.asInstanceOf[Double])

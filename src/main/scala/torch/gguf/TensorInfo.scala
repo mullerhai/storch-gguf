@@ -11,6 +11,13 @@ import java.util.Objects
  * This class stores key information about a tensor including its name, shape,
  * data type, and location/offset with respect to {@link GGUF# getTensorDataOffset ( )}.
  */
+//trait TensorInfo:
+//  def name(): String
+//  def shape(): Array[Long]
+//  def ggmlType(): GGMLType
+//  def offset(): Long
+//  def create(name: String, shape: Array[Long], ggmlType: GGMLType, offset: Long): TensorInfo
+
 object TensorInfo {
   /**
    * Constructs a new {@link TensorInfo} with the specified parameters.
@@ -88,8 +95,8 @@ final class TensorInfo (
    * @param other the object to compare with
    * @return true if the objects are equal, false otherwise
    */
-  override def equals(other: AnyRef): Boolean = {
-    if (this eq other) return true
+  override def equals(other: Any): Boolean = {
+    if (this eq other.asInstanceOf[TensorInfo]) return true
     if (other.isInstanceOf[TensorInfo]) {
       val that = other.asInstanceOf[TensorInfo]
       offset == that.offset && Objects.equals(name, that.name) && Objects.deepEquals(shape, that.shape) && (ggmlType eq that.ggmlType)

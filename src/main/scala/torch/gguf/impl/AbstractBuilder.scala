@@ -8,7 +8,8 @@ abstract class AbstractBuilder extends Builder {
 
   protected def putArray(key: String, componentType: MetadataValueType, array: AnyRef): BuilderImpl
 
-  override def clone: Builder
+//  override def clone(): AnyRef
+//  override def clone: AbstractBuilder
 
   override def containsKey(key: String): Boolean = getValue(classOf[AnyRef], key) != null
 
@@ -61,4 +62,6 @@ abstract class AbstractBuilder extends Builder {
   override def putArrayOfFloat(key: String, value: Array[Float]): Builder = putArray(key, MetadataValueType.FLOAT32, value)
 
   override def putArrayOfDouble(key: String, value: Array[Double]): Builder = putArray(key, MetadataValueType.FLOAT64, value)
+
+
 }

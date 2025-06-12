@@ -19,8 +19,8 @@ import scala.collection.Seq
 //    javaCppVersion := (ThisBuild / javaCppVersion).value,
 ////    csrCacheDirectory := file("D:\\coursier"),
 //  )
-
-ThisBuild / tlBaseVersion := "0.0.1" // your current series x.y
+ThisBuild / version := "0.0.2"
+ThisBuild / tlBaseVersion := "0.0.2" // your current series x.y
 //ThisBuild / CoursierCache := file("D:\\coursier")
 ThisBuild / organization := "io.github.mullerhai" //"dev.storch"
 ThisBuild / organizationName := "storch.dev"
@@ -30,7 +30,6 @@ ThisBuild / developers := List(
   // your GitHub handle and name
   tlGitHubDev("mullerhai", "mullerhai")
 )
-ThisBuild / version := "0.0.1"
 
 ThisBuild / scalaVersion := "3.6.4"
 ThisBuild / tlSonatypeUseLegacyHost := false

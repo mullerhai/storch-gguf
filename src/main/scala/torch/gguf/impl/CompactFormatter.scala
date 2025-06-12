@@ -1,6 +1,6 @@
 package torch.gguf.impl
 
-import java.lang.reflect.Array
+import java.lang.reflect.Array as JArray
 import torch.gguf.MetadataValueType.{ARRAY, BOOL, FLOAT32, FLOAT64, INT16, INT32, INT64, INT8, STRING, UINT16, UINT32, UINT64, UINT8}
 
 /**
@@ -29,36 +29,42 @@ object CompactFormatter {
    * @return a compact string representation
    */
   def format(obj: AnyRef, maxLength: Int, maxItems: Int): String = {
-    if (obj == null) return "null"
-    // Handle arrays
-    if (obj.getClass.isArray) return formatArray(obj, maxItems)
-    // Handle strings
-    if (obj.isInstanceOf[String]) return formatString(obj.asInstanceOf[String], maxLength, true)
-    // For all other types, use toString() and truncate if needed
-    formatString(obj.toString, maxLength, false)
+    obj match
+      case null => "null"
+      case arr: Array[?] => formatArray(arr, maxItems)
+      case str: String => formatString(str, maxLength, addQuotes = true)
+      case _ => formatString(obj.toString, maxLength, addQuotes = false)
+//    if (obj == null) return "null"
+//    // Handle arrays
+//    if (obj.getClass.isArray) return formatArray(obj, maxItems)
+//    // Handle strings
+//    if (obj.isInstanceOf[String]) return formatString(obj.asInstanceOf[String], maxLength, true)
+//    // For all other types, use toString() and truncate if needed
+//    formatString(obj.toString, maxLength, false)
   }
 
   private def formatString(str: String, maxLength: Int, addQuotes: Boolean) = {
-    var value = formatString(str, maxLength)
+    var value = formatString2(str, maxLength)
     if (addQuotes) value = "\"" + value + "\""
     value
   }
 
-  private def formatString(str: String, maxLength: Int): String = {
+  private def formatString2(str: String, maxLength: Int): String = {
     if (str.length <= maxLength) return str
     // Reserve space for ellipsis and quotes if present
     val targetLength = maxLength - ELLIPSIS.length
     str.substring(0, targetLength) + ELLIPSIS
   }
 
+  //formatArray(array: Array[?], maxItems: Int)
   private def formatArray(array: AnyRef, maxItems: Int): String = {
-    val length = Array.getLength(array)
+    val length = JArray.getLength(array)
     if (length == 0) return "[]"
     val sb = new StringBuilder("[")
     val itemsToShow = Math.min(length, maxItems)
     for (i <- 0 until itemsToShow) {
       if (i > 0) sb.append(", ")
-      val item = Array.get(array, i)
+      val item = JArray.get(array, i)
       sb.append(format(item, DEFAULT_MAX_LENGTH, maxItems))
     }
     if (length > maxItems) sb.append(", ").append(ELLIPSIS)

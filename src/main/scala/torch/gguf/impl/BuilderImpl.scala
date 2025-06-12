@@ -13,10 +13,20 @@ import java.util.stream.Collectors
 object BuilderImpl {
   private val DEFAULT_VERSION = 3
 
-  private[impl] def fromExisting(gguf: GGUF) = new BuilderImpl().setVersion(gguf.getVersion).setMetadata(BuilderImpl.reconstructMetadata(gguf)).setMetadataTypes(BuilderImpl.reconstructTypes(gguf)).setTensors(BuilderImpl.fromCollection(gguf.getTensors))
+  private[impl] def fromExisting(gguf: GGUF) = new BuilderImpl()
+    .setVersion(gguf.getVersion)
+    .setMetadata(BuilderImpl.reconstructMetadata(gguf).toMap)
+    .setMetadataTypes(BuilderImpl.reconstructTypes(gguf).toMap)
+    .setTensors(BuilderImpl.fromCollection(gguf.getTensors))
 
-  private def reconstructMetadata(gguf: GGUF) = gguf.getMetadataKeys.stream.collect(Collectors.toMap(Function.identity, (key: String) => gguf.getValue(classOf[AnyRef], key), (a: AnyRef, b: AnyRef) => a, util.LinkedHashMap.`new`))
+//  private def reconstructMetadata(gguf: GGUF) = gguf.getMetadataKeys.stream.collect(Collectors.toMap(Function.identity, (key: String) => gguf.getValue(classOf[AnyRef], key), (a: AnyRef, b: AnyRef) => a, util.LinkedHashMap.`new`))
 
+  private def reconstructMetadata(gguf: GGUF): mutable.LinkedHashMap[String, Any] =
+    val result = mutable.LinkedHashMap[String, Any]()
+    gguf.getMetadataKeys.foreach { key =>
+      result(key) = gguf.getValue[Any](classOf[Any], key)
+    }
+    result
   private def reconstructTypes(gguf: GGUF) = {
     val metadataTypes = new mutable.HashMap[String, MetadataValueType]
     for (key <- gguf.getMetadataKeys) {
@@ -28,16 +38,24 @@ object BuilderImpl {
     metadataTypes
   }
 
-  private def fromCollection(tensors: Seq[TensorInfo]) = tensors.collect(Collectors.toMap(TensorInfo.name, Function.identity, (a: TensorInfo, b: TensorInfo) => {
-    throw new IllegalArgumentException("duplicated tensor names")
-  }, util.LinkedHashMap.`new`))
+//  private def fromCollection(tensors: Seq[TensorInfo]) = tensors.collect(Collectors.toMap(TensorInfo.name, Function.identity, (a: TensorInfo, b: TensorInfo) => {
+//    throw new IllegalArgumentException("duplicated tensor names")
+//  }, util.LinkedHashMap.`new`))
 
+  private def fromCollection(tensors: Iterable[TensorInfo]): mutable.LinkedHashMap[String, TensorInfo] =
+    val result = mutable.LinkedHashMap[String, TensorInfo]()
+    tensors.foreach { tensor =>
+      if result.contains(tensor.name) then
+        throw new IllegalArgumentException("duplicated tensor names")
+      result(tensor.name ) = tensor
+    }
+    result
   private def sizeOfStringValue(value: String) = java.lang.Long.BYTES // uint64_t len + value.getBytes(StandardCharsets.UTF_8).length.toLong
 
   private def sizeOfTensorInfo(tensorInfo: TensorInfo) = sizeOfStringValue(tensorInfo.name) // gguf_string_t name + Integer.BYTES// uint32_t n_dimensions; + Long.BYTES * tensorInfo.shape.length.toLong// uint64_t dimensions[n_dimensions]; + Integer.BYTES// ggmlType type + Long.BYTES// uint64_t offset
 
   @SuppressWarnings(Array("unchecked"))
-  private def castTo[T](key: String, value: AnyRef, targetClass: Class[? <: T]) = {
+  private def castTo[T](key: String, value: Any, targetClass: Class[? <: T]) = {
 //    Objects.requireNonNull(value)
     try if (targetClass.isPrimitive) GGUFImpl.toBoxedClass(targetClass).cast(value).asInstanceOf[T]
     else targetClass.cast(value)
@@ -58,15 +76,19 @@ final class BuilderImpl  extends AbstractBuilder {
     this.version = newVersion
     this
   }
-
-  private[impl] def setMetadata(newMetadata: Map[String, AnyRef]) = {
+  
+  
+  //newMetadata: Map[String, AnyRef]
+  private[impl] def setMetadata(newMetadata: Map[String, Any]) = {
     // Must preserve insertion order.
 //    assert(newMetadata.isInstanceOf[util.LinkedHashMap[_, _]])
+    this.metadata.clear()
     this.metadata ++= newMetadata
     this
   }
 
   private[impl] def setMetadataTypes(newMetadataTypes: Map[String, MetadataValueType]) = {
+    this.metadataTypes.clear()
     this.metadataTypes ++= newMetadataTypes
     this
   }
@@ -82,8 +104,8 @@ final class BuilderImpl  extends AbstractBuilder {
   override def clone: BuilderImpl = new BuilderImpl()
     .setVersion(getVersion)
     .setMetadata(this.metadata.toMap)
-    .setMetadataTypes(new mutable.LinkedHashMap[String, MetadataValueType](this.metadataTypes))
-    .setTensors(new mutable.LinkedHashMap[String, TensorInfo](this.tensorInfos))
+    .setMetadataTypes(this.metadataTypes.toMap) //new mutable.LinkedHashMap[String, MetadataValueType](this.metadataTypes))
+    .setTensors(this.tensorInfos ) //new mutable.LinkedHashMap[String, TensorInfo](this.tensorInfos))
 
   override def getVersion: Int = this.version
 
@@ -92,46 +114,39 @@ final class BuilderImpl  extends AbstractBuilder {
 //    Objects.requireNonNull(valueType)
     var totalSize = Integer.BYTES // gguf_metadata_value_type: uint32_t type;
     valueType match {
-      case UINT8 => // fall-through
-      case INT8 => // fall-through
-      case UINT16 => // fall-through
-      case INT16 => // fall-through
-      case UINT32 => // fall-through
-      case INT32 => // fall-through
-      case FLOAT32 => // fall-through
-      case BOOL => // fall-through
-      case UINT64 => // fall-through
-      case INT64 => // fall-through
-      case FLOAT64 =>
-        totalSize += valueType.byteSize
+      case UINT8 |INT8 |UINT16|INT16|UINT32|INT32| FLOAT32|BOOL|UINT64|INT64|FLOAT64=> // fall-through
+        totalSize += valueType.byteSize()
       case STRING =>
         totalSize += BuilderImpl.sizeOfStringValue(value.asInstanceOf[String])
       case ARRAY =>
-        totalSize += sizeOfArray(key, value)
+        totalSize += sizeOfArray(key, value).toInt
     }
     totalSize
   }
 
   private def sizeOfArray(key: String, arrayValue: Any): Long = {
     assert(arrayValue.getClass.isArray)
-    val componentType = this.metadataTypes.get(key + "[]")
+    val componentType = this.metadataTypes.get(key + "[]").get
     if (componentType eq MetadataValueType.ARRAY) throw new IllegalArgumentException("array of arrays not supported for key '" + key + "'")
     if (componentType eq MetadataValueType.STRING) {
       val stringArray = arrayValue.asInstanceOf[Array[String]]
-      var totalSize = Integer.BYTES // gguf_metadata_value_type: uint32_t type; + Long.BYTES// uint64_t len;
+      var totalSize = Integer.BYTES + java.lang.Long.BYTES// gguf_metadata_value_type: uint32_t type; + Long.BYTES// uint64_t len;
       for (s <- stringArray) {
         totalSize += BuilderImpl.sizeOfStringValue(s)
       }
-      return totalSize
+      totalSize
+    }else{
+      val array = arrayValue.asInstanceOf[Array[?]]
+      java.lang.Integer.BYTES + java.lang.Long.BYTES + array.length * componentType.byteSize()
     }
     // Nested arrays are not supported yet.
-    assert(arrayValue.getClass.isArray && ((arrayValue.getClass.getComponentType eq classOf[String]) || arrayValue.getClass.getComponentType.isPrimitive))
-    Integer.BYTES // gguf_metadata_value_type: uint32_t component_type; + Long.BYTES// uint64_t len; + Array.getLength(arrayValue) * componentType.byteSize.toLong// gguf_metadata_value_t array[len];
+//    assert(arrayValue.getClass.isArray && ((arrayValue.getClass.getComponentType eq classOf[String]) || arrayValue.getClass.getComponentType.isPrimitive))
+//    Integer.BYTES // gguf_metadata_value_type: uint32_t component_type; + Long.BYTES// uint64_t len; + Array.getLength(arrayValue) * componentType.byteSize.toLong// gguf_metadata_value_t array[len];
   }
 
   private def computeTensorDataOffset = {
     var tensorDataOffset = Integer.BYTES // uint32_t MAGIC + Integer.BYTES// uint32_t version + Long.BYTES// uint64_t tensor_count + Long.BYTES// uint64_t metadata_kv_count;
-
+//    var tensorDataOffset = java.lang.Integer.BYTES + java.lang.Integer.BYTES + java.lang.Long.BYTES + java.lang.Long.BYTES
     for (entry <- this.metadata) {
       val key = entry._1
       val value = entry._2
@@ -170,7 +185,7 @@ final class BuilderImpl  extends AbstractBuilder {
     val value = this.metadata.get(key)
     if (value == null) {
       // value not found
-      return null
+      return null.asInstanceOf[T]
     }
     if (targetClass.isPrimitive) GGUFImpl.toBoxedClass(targetClass).cast(value).asInstanceOf[T]
     else targetClass.cast(value)
@@ -178,15 +193,15 @@ final class BuilderImpl  extends AbstractBuilder {
 
   override def getTensor(tensorName: String): TensorInfo = this.tensorInfos.getOrElse(tensorName,null)
 
-  override def getMetadataKeys = this.metadata.keySet
+  override def getMetadataKeys = this.metadata.keySet.toSet
 
-  override def getTensors: Seq[TensorInfo] = this.tensorInfos.values.toSeq
+  override def getTensors = this.tensorInfos.values.toSeq
 
   override def getType(key: String): MetadataValueType = this.metadataTypes.getOrElse(key,null)
 
   override def getComponentType(key: String): MetadataValueType = {
     if (!this.metadata.contains(key)) return null
-    this.metadataTypes.getOrElse(key , "[]")
+    this.metadataTypes.getOrElse(key+ "[]",null)
   }
 
   override def removeKey(key: String): Builder = {
@@ -212,17 +227,16 @@ final class BuilderImpl  extends AbstractBuilder {
     newTensorInfos
   }
 
-  override protected def putValue(key: String, valueType: MetadataValueType, value: AnyRef): BuilderImpl = {
+  override protected def putValue(key: String, valueType: MetadataValueType, value: Any): BuilderImpl = {
 //    Objects.requireNonNull(value)
     valueType match {
-      case UINT8 => // fall-through
-      case INT8 =>
+   
+      case INT8 |UINT8 =>
         metadata.put(key, BuilderImpl.castTo(key, value, classOf[Byte]))
-      case UINT16 => // fall-through
-      case INT16 =>
+      
+      case INT16 |UINT16=>
         metadata.put(key, BuilderImpl.castTo(key, value, classOf[Short]))
-      case UINT32 => // fall-through
-      case INT32 =>
+      case INT32 |UINT32 =>
         metadata.put(key, BuilderImpl.castTo(key, value, classOf[Int]))
       case FLOAT32 =>
         metadata.put(key, BuilderImpl.castTo(key, value, classOf[Float]))
@@ -230,8 +244,7 @@ final class BuilderImpl  extends AbstractBuilder {
         metadata.put(key, BuilderImpl.castTo(key, value, classOf[Boolean]))
       case STRING =>
         metadata.put(key, BuilderImpl.castTo(key, value, classOf[String]))
-      case UINT64 => // fall-through
-      case INT64 =>
+      case INT64 |UINT64 =>
         metadata.put(key, BuilderImpl.castTo(key, value, classOf[Long]))
       case FLOAT64 =>
         metadata.put(key, BuilderImpl.castTo(key, value, classOf[Double]))
