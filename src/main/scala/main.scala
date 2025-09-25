@@ -1,6 +1,6 @@
-import java.nio.file.Paths
+import torch.utils.gguf.GGUF
 
-import torch.gguf.GGUF
+import java.nio.file.Paths
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 @main
@@ -8,8 +8,8 @@ def main(): Unit =
   // TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
   // to see how IntelliJ IDEA suggests fixing it.
   (1 to 5).map(println)
-  val path = "Qwen3-Embedding-0.6B-Q8_0.gguf"
-  //  val path = "D:\\data\\git\\storch-image\\Qwen3-Embedding-0.6B-Q8_0.gguf"
+//  val path = "Qwen3-Embedding-0.6B-Q8_0.gguf"
+  val path = "D:\\data\\git\\storch-image\\Qwen3-Embedding-0.6B-Q8_0.gguf"
   val file = Paths.get(path)
   val gguf = GGUF.read(file)
   println(gguf.getVersion)

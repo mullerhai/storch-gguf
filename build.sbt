@@ -5,7 +5,7 @@ lazy val root = (project in file("."))
   )
 
 import sbt.*
-import Keys.*
+//import Keys.*
 import sbt.Def.settings
 
 import scala.collection.Seq
@@ -19,8 +19,8 @@ import scala.collection.Seq
 //    javaCppVersion := (ThisBuild / javaCppVersion).value,
 ////    csrCacheDirectory := file("D:\\coursier"),
 //  )
-ThisBuild / version := "0.0.2"
-ThisBuild / tlBaseVersion := "0.0.2" // your current series x.y
+ThisBuild / version := "0.0.3"
+ThisBuild / tlBaseVersion := "0.0.3" // your current series x.y
 //ThisBuild / CoursierCache := file("D:\\coursier")
 ThisBuild / organization := "io.github.mullerhai" //"dev.storch"
 ThisBuild / organizationName := "storch.dev"

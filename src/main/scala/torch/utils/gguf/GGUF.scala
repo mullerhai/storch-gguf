@@ -1,8 +1,8 @@
-package torch.gguf
+package torch.utils.gguf
 
 //import gguf.impl.ImplAccessor
-import torch.gguf.impl.ImplAccessor
 
+import torch.utils.gguf.impl.ImplAccessor
 import java.io.IOException
 import java.nio.channels.ReadableByteChannel
 import java.nio.channels.WritableByteChannel

@@ -1,6 +1,6 @@
-package torch.gguf
+package torch.utils.gguf
 
-import torch.gguf.impl.ImplAccessor
+import torch.utils.gguf.impl.ImplAccessor
 
 //import java.util
 

@@ -1,6 +1,5 @@
-package torch.gguf
+package torch.utils.gguf
 
-import torch.gguf.GGMLType
 import java.util
 import java.util.Objects
 

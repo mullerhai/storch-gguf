@@ -17,7 +17,7 @@ Storch-GGUF is a Scala 3 project designed for reading and writing [GGUF](https:/
 ### Installation
 Add the following dependency to your `build.sbt` file:
 ```sbt:D:/data/git/storch-gguf/build.sbt
-libraryDependencies += "io.github.mullerhai" %% "storch-gguf" % "0.0.2"
+libraryDependencies += "io.github.mullerhai" %% "storch-gguf" % "0.0.3"
 
 ```
 

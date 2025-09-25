@@ -1,4 +1,4 @@
-package torch.gguf
+package torch.utils.gguf
 
 import scala.collection.immutable.ArraySeq
 import scala.collection.mutable

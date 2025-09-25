@@ -1,4 +1,4 @@
-package torch.gguf
+package torch.utils.gguf
 
 /**
  * Represents the different types of metadata values that can be stored in a GGUF file.

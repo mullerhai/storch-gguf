@@ -1,6 +1,6 @@
-package torch.gguf.impl
+package torch.utils.gguf.impl
 
-import torch.gguf.{Builder, GGUF}
+import torch.utils.gguf.{Builder, GGUF}
 
 import java.io.IOException
 import java.nio.channels.{ReadableByteChannel, WritableByteChannel}

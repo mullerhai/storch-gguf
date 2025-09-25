@@ -1,8 +1,9 @@
-package torch.gguf.impl
+package torch.utils.gguf.impl
 
-import torch.gguf.MetadataValueType.{ARRAY, BOOL, FLOAT32, FLOAT64, INT16, INT32, INT64, INT8, STRING, UINT16, UINT32, UINT64, UINT8}
+import torch.utils.gguf.{Builder, GGUF, MetadataValueType, TensorInfo}
+import torch.utils.gguf.MetadataValueType.{ARRAY, BOOL, FLOAT32, FLOAT64, INT16, INT32, INT64, INT8, STRING, UINT16, UINT32, UINT64, UINT8}
+import torch.utilsgguf.*
 
-import torch.gguf.*
 import scala.jdk.CollectionConverters.*
 import scala.collection.mutable
 import java.lang.reflect.Array as JArray
