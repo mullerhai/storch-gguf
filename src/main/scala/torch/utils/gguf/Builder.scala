@@ -1,4 +1,6 @@
-package torch.utils.gguf
+package torch
+package utils
+package gguf
 
 import torch.utils.gguf.impl.ImplAccessor
 

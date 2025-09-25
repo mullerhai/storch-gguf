@@ -1,15 +1,17 @@
-package torch.utils.gguf.impl
+package torch
+package utils
+package gguf
+package impl
 
 import torch.utils.gguf.{Builder, GGUF, MetadataValueType, TensorInfo}
 import torch.utils.gguf.MetadataValueType.{ARRAY, BOOL, FLOAT32, FLOAT64, INT16, INT32, INT64, INT8, STRING, UINT16, UINT32, UINT64, UINT8}
-import torch.utilsgguf.*
-
+import torch.utils.gguf.*
 import scala.jdk.CollectionConverters.*
 import scala.collection.mutable
 import java.lang.reflect.Array as JArray
 import java.nio.charset.StandardCharsets
-import java.util.function.Function
-import java.util.stream.Collectors
+//import java.util.function.Function
+//import java.util.stream.Collectors
 
 object BuilderImpl {
   private val DEFAULT_VERSION = 3

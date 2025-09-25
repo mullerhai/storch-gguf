@@ -1,4 +1,7 @@
-package torch.utils.gguf.impl
+package torch
+package utils
+package gguf
+package impl
 
 import torch.utils.gguf.{Builder, GGUF}
 
